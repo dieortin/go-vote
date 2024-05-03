@@ -18,7 +18,7 @@ func SetAuthCookie(w http.ResponseWriter, value string) {
 	})
 }
 
-func GetClient(r *http.Request) (*Client, error) {
+func GetRequestClient(r *http.Request) (*Client, error) {
 	cookie, err := r.Cookie(AuthCookie)
 	if err != nil {
 		return nil, err
@@ -33,9 +33,17 @@ func GetClient(r *http.Request) (*Client, error) {
 	return client, nil
 }
 
+func SetCtxClient(ctx context.Context, client *Client) context.Context {
+	return context.WithValue(ctx, LoggedUser, client)
+}
+
+func GetCtxClient(ctx context.Context) *Client {
+	return ctx.Value(LoggedUser).(*Client)
+}
+
 func Authenticate(handler http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		client, err := GetClient(r)
+		client, err := GetRequestClient(r)
 		if err != nil {
 			fmt.Println("Authentication failed")
 			http.Redirect(w, r, "/register", http.StatusFound)
@@ -43,7 +51,7 @@ func Authenticate(handler http.HandlerFunc) http.HandlerFunc {
 		}
 
 		fmt.Println("Authentication succeeded")
-		r = r.WithContext(context.WithValue(r.Context(), LoggedUser, client))
+		r = r.WithContext(SetCtxClient(r.Context(), client))
 		handler.ServeHTTP(w, r)
 	}
 }
