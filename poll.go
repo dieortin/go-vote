@@ -78,3 +78,27 @@ func (po PollOption) AddVote(voter uuid.UUID) {
 func (po PollOption) NumVotes() int {
 	return len(po.Votes)
 }
+
+type PollStorage map[uuid.UUID]*Poll
+
+func NewPollStorage() PollStorage {
+	return make(PollStorage)
+}
+
+func (ps PollStorage) AddPoll(poll *Poll) (uuid.UUID, error) {
+	newUuid, err := uuid.NewUUID()
+	if err != nil {
+		return uuid.Nil, err
+	}
+
+	ps[newUuid] = poll
+	return newUuid, nil
+}
+
+func (ps PollStorage) GetPoll(id uuid.UUID) *Poll {
+	poll, ok := ps[id]
+	if !ok {
+		return nil
+	}
+	return poll
+}
