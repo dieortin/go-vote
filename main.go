@@ -2,13 +2,15 @@ package main
 
 import (
 	"fmt"
-	"golang.org/x/exp/maps"
 	"html/template"
 	"log"
 	"net/http"
+
+	"golang.org/x/exp/maps"
 )
 
 var clientMap = make(ClientMap)
+var pollStorage = NewPollStorage()
 
 func registerHandlerPost(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
@@ -44,6 +46,48 @@ func votePageHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func newTemplateServer(template string, value any) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		err := templates.ExecuteTemplate(w, template, value)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+	}
+}
+
+func serveFile(file string) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, file)
+	}
+}
+
+func newPollHandler(w http.ResponseWriter, r *http.Request) {
+	client := GetCtxClient(r.Context())
+	if client == nil {
+		fmt.Printf("Client is not logged in! Redirecting to index")
+		http.Redirect(w, r, "/", http.StatusFound)
+	}
+
+	name := r.FormValue("name")
+	option1 := r.FormValue("option1")
+	option2 := r.FormValue("option2")
+	option3 := r.FormValue("option3")
+	option4 := r.FormValue("option4")
+
+	fmt.Printf("Received POST for form with values:\n  Name: %s\n  Option 1: %s\n  Option 2: %s\n  Option 3: %s\n  Option 4: %s\n", name, option1, option2, option3, option4)
+
+	poll := NewPoll(name, []string{option1, option2, option3, option4})
+	id, err := pollStorage.AddPoll(poll)
+	if err != nil {
+		fmt.Println("Error while adding new poll to storage")
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	fmt.Printf("Added new poll to storage with UUID %v", id)
+}
+
 func allClientsHandler(w http.ResponseWriter, r *http.Request) {
 	allClients := maps.Values(clientMap)
 	err := templates.ExecuteTemplate(w, "allclients.html", allClients)
@@ -60,7 +104,9 @@ func main() {
 	//http.HandleFunc("/", mainpageHandler)
 	http.HandleFunc("GET /register", registerHandlerGet)
 	http.HandleFunc("POST /register", registerHandlerPost)
-	http.HandleFunc("/", Authenticate(votePageHandler))
+	http.HandleFunc("POST /poll", Authenticate(newPollHandler))
+	http.HandleFunc("GET /poll", Authenticate(serveFile("views/newpoll.html")))
+	http.HandleFunc("/", Authenticate(serveFile("views/newpoll.html")))
 	http.HandleFunc("/allclients", Authenticate(allClientsHandler))
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }
