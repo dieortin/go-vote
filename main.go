@@ -75,7 +75,12 @@ func newPollHandler(w http.ResponseWriter, r *http.Request) {
 	option3 := r.FormValue("option3")
 	option4 := r.FormValue("option4")
 
-	fmt.Printf("Received POST for form with values:\n  Name: %s\n  Option 1: %s\n  Option 2: %s\n  Option 3: %s\n  Option 4: %s\n", name, option1, option2, option3, option4)
+	log.Printf("Received POST for form with values:\n")
+	log.Printf("  Name: %s\n", name)
+	log.Printf("  Option 1: %s\n", option1)
+	log.Printf("  Option 2: %s\n", option2)
+	log.Printf("  Option 3: %s\n", option3)
+	log.Printf("  Option 4: %s\n", option4)
 
 	poll := NewPoll(name, []string{option1, option2, option3, option4})
 	id, err := pollStorage.AddPoll(poll)
