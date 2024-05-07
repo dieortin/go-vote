@@ -78,7 +78,7 @@ func newPollHandler(w http.ResponseWriter, r *http.Request) {
 	log.Printf("  Option 3: %s\n", option3)
 	log.Printf("  Option 4: %s\n", option4)
 
-	poll := NewPoll(name, []string{option1, option2, option3, option4})
+	poll := NewPoll(client, name, []string{option1, option2, option3, option4})
 	id, err := pollStorage.AddPoll(poll)
 	if err != nil {
 		fmt.Println("Error while adding new poll to storage")

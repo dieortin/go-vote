@@ -9,12 +9,14 @@ import (
 type Poll struct {
 	Title   string
 	Options map[string]*PollOption
+	Owner   *Client
 }
 
-func NewPoll(title string, options []string) *Poll {
+func NewPoll(owner *Client, title string, options []string) *Poll {
 	poll := Poll{
 		Title:   title,
 		Options: make(map[string]*PollOption),
+		Owner:   owner,
 	}
 
 	for _, v := range options {
