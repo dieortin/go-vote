@@ -1,0 +1,17 @@
+{{template "base" .}}
+
+{{define "page-title"}}
+    New Poll
+{{end}}
+
+{{define "page-content"}}
+    <h2>Create a new poll</h2>
+    <form action="/polls/new" method="POST">
+        <div><label for="name">Poll name</label><input type="text" id="name" name="name" required maxlength="64" size="20"></div>
+        <div><label for="option1">Option 1</label><input type="text" id="option1" name="option1" required maxlength="64" size="20"></div>
+        <div><label for="option2">Option 2</label><input type="text" id="option2" name="option2" required maxlength="64" size="20"></div>
+        <div><label for="option3">Option 3</label><input type="text" id="option3" name="option3" required maxlength="64" size="20"></div>
+        <div><label for="option4">Option 4</label><input type="text" id="option4" name="option4" required maxlength="64" size="20"></div>
+        <div><input type="submit" value="Save"></div>
+    </form>
+{{end}}

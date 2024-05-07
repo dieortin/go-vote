@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"html/template"
 	"log"
 	"net/http"
 
@@ -11,6 +10,8 @@ import (
 
 var clientMap = make(ClientMap)
 var pollStorage = NewPollStorage()
+
+var pageMap = NewPageMap("base.tmpl", []string{"newpoll.tmpl", "polls.tmpl", "register.tmpl"})
 
 func registerHandlerPost(w http.ResponseWriter, r *http.Request) {
 	name := r.FormValue("name")
@@ -28,37 +29,15 @@ func registerHandlerPost(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusFound)
 }
 
-func registerHandlerGet(w http.ResponseWriter, r *http.Request) {
-	http.ServeFile(w, r, "views/register.html")
-}
-
-func votePageHandler(w http.ResponseWriter, r *http.Request) {
-	client := r.Context().Value(LoggedUser)
-	if client == nil {
-		http.Redirect(w, r, "/", http.StatusFound)
-		return
-	}
-
-	err := templates.ExecuteTemplate(w, "vote.html", client)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-}
-
-func newTemplateServer(template string, value any) func(w http.ResponseWriter, r *http.Request) {
+func renderTemplate(tmpl string, value any) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := templates.ExecuteTemplate(w, template, value)
+		log.Printf("Rendering template %q\n", tmpl)
+		err := pageMap.ExecuteTemplate(w, tmpl, value)
 		if err != nil {
+			log.Printf("Error while executing template %q", tmpl)
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
-	}
-}
-
-func serveFile(file string) func(w http.ResponseWriter, r *http.Request) {
-	return func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, file)
 	}
 }
 
@@ -90,25 +69,25 @@ func newPollHandler(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/polls", http.StatusFound)
 }
 
-func allClientsHandler(w http.ResponseWriter, r *http.Request) {
-	allClients := maps.Values(clientMap)
-	err := templates.ExecuteTemplate(w, "allclients.html", allClients)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+func allPollsHandler(w http.ResponseWriter, r *http.Request) {
+	renderTemplate("polls.tmpl", maps.Values(pollStorage))(w, r)
+}
+
+func redirectHandler(url string) func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Printf("Redirecting to %q", url)
+		http.Redirect(w, r, url, http.StatusFound)
 	}
 }
 
-var templates = template.Must(template.ParseGlob("views/*.html"))
-
 func main() {
-	fmt.Println("Starting voting server")
+	log.Println("Starting go-vote server")
 
-	//http.HandleFunc("/", mainpageHandler)
-	http.HandleFunc("GET /register", registerHandlerGet)
+	http.HandleFunc("GET /register", renderTemplate("register.tmpl", nil))
 	http.HandleFunc("POST /register", registerHandlerPost)
-	http.HandleFunc("POST /poll", Authenticate(newPollHandler))
-	http.HandleFunc("GET /poll", Authenticate(serveFile("views/newpoll.html")))
-	http.HandleFunc("/", Authenticate(serveFile("views/newpoll.html")))
-	http.HandleFunc("/allclients", Authenticate(allClientsHandler))
+	http.HandleFunc("POST /polls/new", Authenticate(newPollHandler))
+	http.HandleFunc("GET /polls/new", Authenticate(renderTemplate("newpoll.tmpl", nil)))
+	http.HandleFunc("GET /polls", allPollsHandler)
+	http.HandleFunc("/", redirectHandler("/polls/new"))
 	log.Fatal(http.ListenAndServe(":8080", nil))
 }

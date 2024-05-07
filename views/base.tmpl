@@ -1,0 +1,50 @@
+{{define "base"}}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{block "page-title" .}} {{end}}</title>
+    <style>
+        body {
+            margin: 0;
+            font-family: sans-serif;
+        }
+        header {
+            background-color: #222;
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-content: stretch;
+            padding-left: 0.5em;
+            padding-right: 1em;
+        }
+        header > h1 {
+            font-size: 1.5em;
+            margin: 0.75em;
+        }
+
+        header div.login-info {
+            display: flex;
+            padding: 0.5em;
+            justify-content: center;
+            align-items: center;
+        }
+
+        section.page-content {
+            background-color: #efefef;
+            padding: 2em;
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <h1>go-vote</h1>
+        <div class="login-info">
+            <span>Login section</span>
+        </div>
+    </header>
+    <section class="page-content">{{block "page-content" .}} {{end}}</section>
+</body>
+</html>
+{{end}}

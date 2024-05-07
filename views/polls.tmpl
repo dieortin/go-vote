@@ -1,0 +1,26 @@
+{{template "base" .}}
+
+{{define "page-title"}}
+    Poll list
+{{end}}
+
+{{define "page-content"}}
+    {{if len . | eq 0}}
+        <span>No polls were created yet. <a href="/polls/new">Create one!</a></span>
+    {{else}}
+        <a href="/polls/new">New poll</a>
+        <h2>All current polls:</h2>
+    {{end}}
+    <ul>
+    {{range .}}
+        <li>{{.Title}} (by {{.Owner.Name}})
+            <ol>
+                {{range .Options}}
+                    <li>{{.Name}}</li>
+                {{end}}
+            </ol>
+        </li>
+
+    {{end}}
+    </ul>
+{{end}}
