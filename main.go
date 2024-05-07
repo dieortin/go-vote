@@ -86,7 +86,8 @@ func newPollHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Printf("Added new poll to storage with UUID %v", id)
+	log.Printf("Added new poll to storage with UUID %v, redirecting to polls overview", id)
+	http.Redirect(w, r, "/polls", http.StatusFound)
 }
 
 func allClientsHandler(w http.ResponseWriter, r *http.Request) {
