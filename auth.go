@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"fmt"
+	"log"
 	"net/http"
 )
 
@@ -29,7 +29,6 @@ func GetRequestClient(r *http.Request) (*Client, error) {
 		return nil, err
 	}
 
-	fmt.Printf("Client with name %v found with provided id\n", client.Name)
 	return client, nil
 }
 
@@ -45,12 +44,12 @@ func Authenticate(handler http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		client, err := GetRequestClient(r)
 		if err != nil {
-			fmt.Println("Authentication failed")
+			log.Println("Authentication failed")
 			http.Redirect(w, r, "/register", http.StatusFound)
 			return
 		}
 
-		fmt.Println("Authentication succeeded")
+		log.Printf("Authentication succeeded for client with name %q\n", client.Name)
 		r = r.WithContext(SetCtxClient(r.Context(), client))
 		handler.ServeHTTP(w, r)
 	}
