@@ -64,10 +64,6 @@ func serveFile(file string) func(w http.ResponseWriter, r *http.Request) {
 
 func newPollHandler(w http.ResponseWriter, r *http.Request) {
 	client := GetCtxClient(r.Context())
-	if client == nil {
-		fmt.Printf("Client is not logged in! Redirecting to index")
-		http.Redirect(w, r, "/", http.StatusFound)
-	}
 
 	name := r.FormValue("name")
 	option1 := r.FormValue("option1")
